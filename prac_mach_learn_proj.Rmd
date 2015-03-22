@@ -7,7 +7,7 @@ output: html_document
 ## Data
 <p>The data comes from wearable devices. It is collected while many subjects do different types of physical exercies.</p>
 ## Objective
-<p>The goal of your project is to predict the manner in which they did the exercise.</p>
+<p>The goal of this project is to look at the exercise data and build a model to predict the manner in which a person did an exercise.</p>
 ## Executive Summary
 <p>I use only columns that do not have NAs anywhere in the values as my covatiates. I get rid of a few columns that aren't relevant to the analysis. As the data is complex and non-linear, I opted for a Random Forest algorithm. I built the model with 52 covariates that meet the criteria above. The model predicted very well against both test data sets.</p>
 ## Load Data and Create Cross Validation
