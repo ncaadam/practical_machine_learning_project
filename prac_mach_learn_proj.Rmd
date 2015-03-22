@@ -1,0 +1,64 @@
+---
+title: "Practical Machine Learning Project"
+author: "Adam Stuckey"
+date: "March 21, 2015"
+output: html_document
+---
+## Data
+<p>The data comes from wearable devices. It is collected while many subjects do different types of physical exercies.</p>
+## Objective
+<p>The goal of your project is to predict the manner in which they did the exercise.</p>
+## Executive Summary
+<p>I use only columns that do not have NAs anywhere in the values as my covatiates. I get rid of a few columns that aren't relevant to the analysis. As the data is complex and non-linear, I opted for a Random Forest algorithm. I built the model with 52 covariates that meet the criteria above. The model predicted very well against both test data sets.</p>
+## Load Data and Create Cross Validation
+```{r echo=FALSE}
+library(caret)
+library(randomForest)
+set.seed(54321)
+```
+```{r}
+training_raw <- read.csv('pml-training.csv', na.strings=c("NA","#DIV/0!",""))
+testing_raw <- read.csv('pml-testing.csv', na.strings=c("NA","#DIV/0!",""))
+train_id <- createDataPartition(y = training_raw$classe, p = 0.60, list = FALSE)
+training <- training_raw[train_id,]
+testing <- training_raw[-train_id,]
+```
+<p> I import the training and test data sets. When I explored the data, I noticed many error values (e.g. "NA", "#DIV/0!", ""). For these values, I replaced them all with NA on loading the data.
+
+I split the training data set into train and test partitions. I used 60/40% as the split.</p>
+## Data Clean Up
+<p>Below I clean up the data by getting rid of some columns. I do so because there are many variables, but also many with NA as a majority of their values. On my first pass, I decided to get rid of any column that has an NA at all. I also get rid of a few columns that aren't relevant to our analysis (e.g. user_name, new_window, num_window). I also ignored all time series data as it didn't appear impactful to the analysis. I end up with 52 covariates.</p>
+```{r}
+unneeded_cols <- c("X","user_name","raw_timestamp_part_1","raw_timestamp_part_2","cvtd_timestamp","new_window","num_window")
+na_cols <- names(training_raw[,sapply(training_raw, function(x) any(is.na(x)))])
+drop_cols <- c(unneeded_cols,na_cols)
+drop <- names(training) %in% drop_cols
+training <- training[!drop]
+good_cols <- c(names(training))
+keep <- names(testing) %in% names(training)
+testing <- testing[keep]
+big_testing <- testing_raw[keep]
+```
+<p>As you can see, I apply all column selection to each of the test data sets as well.</p>
+## Build Random Forest Model Using All Variables
+```{r}
+rf_model <- randomForest(classe ~ .,data = training)
+preds <- predict(rf_model, testing, type = "class")
+confusionMatrix(preds, testing$classe)
+```
+<p>As you can see from the Confusion Matrix, the accuracy of our model is extrememly high, with a high confidence interval. It appears our model predicts very well.</p>
+## Predict Against Test Dataset
+<p>This code is intended to create the submission files for the second part of this project. It doesn't execute when I build the Knit file.</p>
+```{r eval=FALSE}
+real_preds <- predict(rf_model, big_testing, type = "class")
+pml_write_files = function(x)
+{
+     n = length(x)
+     for(i in 1:n)
+     {
+         filename = paste0("problem_id_",i,".txt")
+         write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+     }
+}
+> pml_write_files(real_preds)
+```
